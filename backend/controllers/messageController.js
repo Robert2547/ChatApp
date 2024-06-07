@@ -48,9 +48,14 @@ export const getMessages = async (req, res) => {
     const senderId = req.user._id;
     const conversation = await Conversation.findOne({
       participants: { $all: [senderId, userToChatId] },
-    }).populate("messages"); // Populate will return the actual message objects instead of just their IDs
+    }).populate("messages"); // Populate will return the actual message objects instead of just their IDs (Not referenced, but the actual message)
 
-    res.status(200).json(conversation.messages);
+    if (!conversation) {
+      return res.status(200).json([]); // If there is no conversation between the two users, return an empty array
+    }
+
+    const messages = conversation.messages;
+    res.status(200).json(messages);
   } catch (error) {
     console.log("Error in getMessages: ", error.message);
     res.status(500).json({ message: error.message });
