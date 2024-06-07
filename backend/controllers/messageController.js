@@ -1,5 +1,5 @@
-import Conversation from "../models/Conversation.js";
-import Message from "../models/Message.js";
+import Conversation from "../models/conversationModel.js";
+import Message from "../models/messageModel.js";
 
 export const sendMessage = async (req, res) => {
   try {
@@ -29,6 +29,9 @@ export const sendMessage = async (req, res) => {
       // If the message is created successfully, save it to the database
       conversation.messages.push(newMessage._id);
     }
+
+    await conversation.save(); // Save the conversation to the database
+    await newMessage.save(); // Save the message to the database
 
     res.status(201).json(newMessage);
   } catch (error) {
