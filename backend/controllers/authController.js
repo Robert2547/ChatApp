@@ -43,7 +43,6 @@ export const signup = async (req, res) => {
       //Genereate JWT token
       jwt.generateTokenAndSetCookie(newUser._id, res);
 
-      
       await newUser.save(); // Save user to database
 
       // Send response of successful signup
@@ -64,10 +63,56 @@ export const signup = async (req, res) => {
   }
 };
 
-export const login = (req, res) => {
-  console.log("Login route");
+export const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ username });
+    const isPasswordCorrect =
+      user && (await bcrypt.compare(password, user.password)); //Check if password is correct and user exists
+    if (!user || !isPasswordCorrect) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid username or password",
+      });
+    }
+
+    // Generate JWT token
+    jwt.generateTokenAndSetCookie(user._id, res);
+
+    // Send response of successful login
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.log("Error in login route", error);
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
 };
 
-export const logout = (req, res) => {
-  console.log("Logout route");
+export const logout = async (req, res) => {
+  try {
+    res.cookie("jwt", "", {
+      maxAge: 0,
+      httpOnly: true,
+    }); // Clear cookie
+
+    res.status(200).json({
+      status: "success",
+      message: "User logged out",
+    });
+  } catch (error) {
+    console.log("Error in logout route", error);
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
 };
