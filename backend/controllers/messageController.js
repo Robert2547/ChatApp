@@ -9,11 +9,11 @@ export const sendMessage = async (req, res) => {
 
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] },
-    });
+    }); //$all operator will match the documents where the participants array contains both senderId and receiverId
 
     if (!conversation) {
       // If there is no conversation between the two users, create a new conversation (first time sending a message to the receiver)
-      conversation = new Conversation({
+      conversation = await Conversation.create({
         participants: [senderId, receiverId],
       });
     }
@@ -30,12 +30,29 @@ export const sendMessage = async (req, res) => {
       conversation.messages.push(newMessage._id);
     }
 
-    await conversation.save(); // Save the conversation to the database
-    await newMessage.save(); // Save the message to the database
+    //SOCKET IO IMPLEMENTATION (real-time chat)
+
+    // This will run in parallel, more efficient
+    await Promise.all([conversation.save(), newMessage.save()]); // Save the conversation and the message to the database
 
     res.status(201).json(newMessage);
   } catch (error) {
     console.log("Error in sendMessage: ", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMessages = async (req, res) => {
+  try {
+    const { id: userToChatId } = req.params;
+    const senderId = req.user._id;
+    const conversation = await Conversation.findOne({
+      participants: { $all: [senderId, userToChatId] },
+    }).populate("messages"); // Populate will return the actual message objects instead of just their IDs
+
+    res.status(200).json(conversation.messages);
+  } catch (error) {
+    console.log("Error in getMessages: ", error.message);
     res.status(500).json({ message: error.message });
   }
 };

@@ -3,18 +3,18 @@ import mongoose from "mongoose";
 const messageSchema = new mongoose.Schema(
   {
     senderId: {
-      //SenderID will be the ID of the user who sent the message
+      // SenderID will be the ID of the user who sent the message
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
     receiverId: {
-      //ReceiverID will be the ID of the user who received the message
+      // ReceiverID will be the ID of the user who received the message
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    messsage: {
+    message: { 
       type: String,
       required: true,
     },
