@@ -30,11 +30,18 @@ export const sendMessage = async (req, res) => {
       conversation.messages.push(newMessage._id);
     }
 
-    //SOCKET IO IMPLEMENTATION (real-time chat)
-
     // This will run in parallel, more efficient
     await Promise.all([conversation.save(), newMessage.save()]); // Save the conversation and the message to the database
 
+    //SOCKET IO IMPLEMENTATION (real-time chat)
+    const receiverSocketId = getReceiverSocketId(receiverId); // Get the receiver's socketId
+    if (receiverSocketId) {
+      // If the receiver is online
+      io.to(receiverSocketId).emit("newMessage", newMessage); // Emit a newMessage event to the receiver
+    }
+
+
+    
     res.status(201).json(newMessage);
   } catch (error) {
     console.log("Error in sendMessage: ", error.message);
